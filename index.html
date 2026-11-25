@@ -1,0 +1,2909 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ExamNet · Feedback Portal</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Calmer, low-glare ExamNet cool-slate surface hierarchy */
+      --bg-canvas: #e9eff6;
+      --bg-gradient-top: #eef4fb;
+      --bg-gradient-bottom: #e2eaf3;
+      --surface: #f7f9fc;
+      --surface-elevated: #fcfdff;
+      --surface-input: #eef3f9;
+      --ink: #0f172a;
+      --ink-secondary: #1e293b;
+      --muted: #475569;
+      --line: #cbd6e4;
+      --line-strong: #b4c2d4;
+      --blue-primary: #1d4ed8;
+      --blue-mid: #2563eb;
+      --blue-bright: #0284c7;
+      --blue-tint: #dbeafe;
+      --blue-border: #93c5fd;
+      --shadow-card: 0 10px 28px -8px rgba(15, 23, 42, 0.09), 0 2px 6px -1px rgba(15, 23, 42, 0.05);
+      --shadow-logo: 0 10px 24px -5px rgba(29, 78, 216, 0.24), 0 3px 8px -2px rgba(15, 23, 42, 0.08);
+      --radius-lg: 18px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, var(--bg-gradient-top) 0%, var(--bg-gradient-bottom) 100%);
+      color: var(--ink);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      position: relative;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Subtle ExamNet geometric constellation backdrop */
+    .network-backdrop {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.55;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Centered ExamNet Brand Header */
+    header {
+      padding: 32px 16px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .logo-tile {
+      width: 62px;
+      height: 62px;
+      border-radius: 17px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-logo);
+      display: grid;
+      place-items: center;
+    }
+
+    .brand-wordmark {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+      margin: 0;
+      line-height: 1.1;
+      color: var(--ink);
+    }
+
+    .brand-wordmark span {
+      color: var(--blue-mid);
+    }
+
+    .brand-subtitle {
+      margin: 4px 0 0;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+    }
+
+    main {
+      width: 100%;
+      max-width: 920px;
+      margin: 18px auto 0;
+      padding: 0 16px 40px;
+      flex: 1;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #f3f7fd 0%, #e4eefb 100%);
+      border: 1px solid var(--blue-border);
+      border-radius: var(--radius-lg);
+      padding: 23px 26px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--blue-primary), var(--blue-bright));
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--blue-primary);
+      background: var(--blue-tint);
+      border: 1px solid var(--blue-border);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .hero h2 {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      margin: 0 0 6px;
+      color: var(--ink);
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--ink-secondary);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .section {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 16.5px;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .section-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--blue-primary);
+      background: var(--blue-tint);
+      border: 1px solid var(--blue-border);
+      border-radius: 8px;
+      padding: 3px 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label,
+    .label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      margin-bottom: 7px;
+    }
+
+    input[type=text],
+    input[type=email],
+    input[type=password],
+    select,
+    textarea {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      font: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      background: var(--surface-input);
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #64748b;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      background: var(--surface-elevated);
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.16);
+    }
+
+    textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    .choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .choice {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      padding: 9px 13px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--ink-secondary);
+      background: var(--surface-input);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .choice:hover {
+      border-color: var(--blue-mid);
+      background: #e3ecf8;
+    }
+
+    .choice:has(input:checked) {
+      background: var(--blue-tint);
+      border-color: var(--blue-primary);
+      color: var(--blue-primary);
+      font-weight: 700;
+    }
+
+    .choice input,
+    .rating input {
+      accent-color: var(--blue-primary);
+      cursor: pointer;
+      width: 15px;
+      height: 15px;
+    }
+
+    .rating {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    .rating th,
+    .rating td {
+      padding: 12px 6px;
+      border-bottom: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .rating tbody tr:nth-child(even) {
+      background: #eff4fa;
+    }
+
+    .rating tbody tr:hover {
+      background: #e3ecf8;
+    }
+
+    .rating th {
+      color: var(--ink-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 11px;
+      font-weight: 700;
+      background: #e8eff8;
+    }
+
+    .rating th:first-child,
+    .rating td:first-child {
+      text-align: left;
+      padding-left: 10px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .btn {
+      border: 0;
+      border-radius: var(--radius-sm);
+      padding: 11px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.16s ease, opacity 0.16s ease, background 0.16s ease;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .primary {
+      background: linear-gradient(90deg, var(--blue-primary) 0%, var(--blue-bright) 100%);
+      color: #ffffff;
+      box-shadow: 0 6px 18px -4px rgba(29, 78, 216, 0.42);
+    }
+
+    .primary:hover:not(:disabled) {
+      box-shadow: 0 8px 22px -4px rgba(29, 78, 216, 0.52);
+      filter: brightness(1.04);
+    }
+
+    .secondary {
+      background: var(--blue-tint);
+      color: var(--blue-primary);
+      border: 1px solid var(--blue-border);
+    }
+
+    .secondary:hover:not(:disabled) {
+      background: #c7dffe;
+    }
+
+    .danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .danger:hover:not(:disabled) {
+      background: #fecaca;
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .notice {
+      display: none;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      margin: 14px 0;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    .notice.success,
+    .notice.error {
+      display: block;
+    }
+
+    .success {
+      background: #dcfce7;
+      color: #14532d;
+      border: 1px solid #86efac;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #7f1d1d;
+      border: 1px solid #fca5a5;
+    }
+
+    .small {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .submitbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    /* Admin Dashboard Styles */
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .dash-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 14px 0 18px;
+    }
+
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .stat small {
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .stat strong {
+      display: block;
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 26px;
+      color: var(--ink);
+      margin-top: 6px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .toolbar input,
+    .toolbar select {
+      max-width: 240px;
+    }
+
+    .scroll {
+      overflow: auto;
+    }
+
+    table.responses {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    table.responses th,
+    table.responses td {
+      padding: 11px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    table.responses tbody tr:nth-child(even) {
+      background: #eff4fa;
+    }
+
+    table.responses tbody tr:hover {
+      background: #e3ecf8;
+    }
+
+    table.responses th {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--ink-secondary);
+      text-transform: uppercase;
+      background: #e8eff8;
+    }
+
+    .pill {
+      display: inline-block;
+      background: var(--blue-tint);
+      color: var(--blue-primary);
+      border: 1px solid var(--blue-border);
+      font-weight: 600;
+      font-size: 12px;
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+
+    .charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .chartbox {
+      height: 240px;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .modalbox {
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      width: min(650px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.3);
+    }
+
+
+    /* Thank You Confirmation Modal */
+    .thankyou-box {
+      background: var(--surface-elevated);
+      border: 1px solid var(--line-strong);
+      width: min(440px, 100%);
+      border-radius: 22px;
+      padding: 32px 28px 26px;
+      text-align: center;
+      box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.32);
+      animation: modalPopIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalPopIn {
+      from {
+        opacity: 0;
+        transform: scale(0.92) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .thankyou-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      border: 1px solid #86efac;
+      color: #15803d;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 10px 22px -6px rgba(22, 163, 74, 0.28);
+    }
+
+    .thankyou-box h3 {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 21px;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin: 0 0 8px;
+    }
+
+    .thankyou-box p {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .thankyou-box .btn {
+      width: 100%;
+      padding: 12px 18px;
+    }
+
+
+    .stats-6 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .charts-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .criteria-item {
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 13px 14px;
+    }
+
+    .criteria-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .criteria-name {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .criteria-score {
+      font-weight: 700;
+      color: var(--blue-primary);
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    .rating-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    .rating-pill {
+      background: var(--surface-input);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-weight: 600;
+    }
+
+    .comment-box {
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+
+    .comment-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .comment-text {
+      font-size: 13.5px;
+      color: var(--ink);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .detail-section-title {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--blue-primary);
+      margin: 16px 0 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 14px;
+      font-size: 13.5px;
+    }
+
+    .detail-row {
+      padding: 6px 0;
+    }
+
+    .detail-row strong {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 18px 16px 26px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .footer strong {
+      display: block;
+      font-weight: 600;
+      color: var(--ink-secondary);
+    }
+
+
+    /* ============================================
+       FLUID & RESPONSIVE SCALING (MOBILE, TABLET, LAPTOP, DESKTOP)
+       ============================================ */
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    main {
+      width: 100%;
+      max-width: min(1160px, 94vw);
+      margin: clamp(12px, 2.2vw, 24px) auto 0;
+      padding: 0 clamp(12px, 2.5vw, 28px) calc(40px + env(safe-area-inset-bottom, 0px));
+    }
+
+    header {
+      padding: clamp(20px, 4vw, 36px) clamp(14px, 3vw, 24px) 8px;
+    }
+
+    .logo-tile {
+      width: clamp(52px, 6.5vw, 66px);
+      height: clamp(52px, 6.5vw, 66px);
+    }
+
+    .brand-wordmark {
+      font-size: clamp(24px, 3.2vw, 32px);
+    }
+
+    .hero {
+      padding: clamp(18px, 2.8vw, 28px) clamp(18px, 3.2vw, 32px);
+      border-radius: clamp(14px, 1.8vw, 20px);
+    }
+
+    .hero h2 {
+      font-size: clamp(19px, 2.4vw, 25px);
+    }
+
+    .card {
+      padding: clamp(16px, 2.4vw, 26px);
+      border-radius: clamp(14px, 1.8vw, 20px);
+    }
+
+    .section {
+      font-size: clamp(15px, 1.8vw, 18px);
+    }
+
+    .grid {
+      grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+      gap: clamp(12px, 1.8vw, 18px);
+    }
+
+    .stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(10px, 1.5vw, 16px);
+    }
+
+    .stats-6 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .stat strong {
+      font-size: clamp(20px, 2.4vw, 28px);
+    }
+
+    .charts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(12px, 1.8vw, 18px);
+    }
+
+    .charts-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(12px, 1.8vw, 18px);
+    }
+
+    .chartbox {
+      height: clamp(210px, 26vw, 280px);
+      position: relative;
+      width: 100%;
+    }
+
+    .criteria-grid {
+      grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+      gap: clamp(10px, 1.5vw, 14px);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(175px, 100%), 1fr));
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toolbar input,
+    .toolbar select {
+      max-width: none;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: var(--radius-sm);
+    }
+
+    table.responses {
+      min-width: 760px;
+    }
+
+    .rating {
+      min-width: 480px;
+    }
+
+    .choice {
+      min-height: 40px;
+      flex: 1 1 auto;
+      justify-content: flex-start;
+    }
+
+    .btn {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .modal,
+    .modal.hidden ~ .modal {
+      padding: clamp(12px, 3vw, 24px);
+    }
+
+    .modalbox,
+    .thankyou-box {
+      width: min(680px, 100%);
+      max-height: calc(100dvh - 24px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .thankyou-box {
+      width: min(440px, 100%);
+    }
+
+    /* Large Desktop / Wide Monitor Scaling (1280px+) */
+    @media (min-width: 1280px) {
+      main {
+        max-width: 1220px;
+      }
+
+      .stats-6 {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+    }
+
+    /* Tablet & Small Laptop (769px – 1024px) */
+    @media (max-width: 1024px) {
+      .stats-6 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .charts-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .charts-3 > .card:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+
+    /* Mobile & Compact Screens (<= 768px) */
+    @media (max-width: 768px) {
+      header {
+        padding-top: 20px;
+      }
+
+      .grid,
+      .stats,
+      .stats-6,
+      .charts,
+      .charts-3,
+      .criteria-grid,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .charts-3 > .card:last-child {
+        grid-column: auto;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .hero {
+        padding: 18px 16px;
+      }
+
+      .choices {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .choice {
+        width: 100%;
+        padding: 10px 12px;
+      }
+
+      .rating {
+        min-width: 0;
+        font-size: 12px;
+      }
+
+      .rating th,
+      .rating td {
+        padding: 9px 4px;
+      }
+
+      .rating th:first-child,
+      .rating td:first-child {
+        padding-left: 6px;
+        word-break: break-word;
+      }
+
+      .dash-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .dash-actions {
+        width: 100%;
+      }
+
+      .dash-actions .btn {
+        flex: 1 1 auto;
+      }
+
+      .submitbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .submitbar .btn,
+      #loginCard .btn {
+        width: 100%;
+      }
+
+      .modalbox {
+        padding: 18px 16px;
+      }
+
+      .thankyou-box {
+        padding: 24px 20px 20px;
+      }
+    }
+
+    /* Very Small Phones (<= 380px) */
+    @media (max-width: 380px) {
+      .rating {
+        font-size: 11px;
+      }
+
+      .rating th {
+        letter-spacing: 0;
+        font-size: 10px;
+      }
+    }
+
+    .footer {
+      text-align: center;
+      padding: 18px 16px 26px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .footer strong {
+      display: block;
+      font-weight: 600;
+      color: var(--ink-secondary);
+    }
+
+    @media (max-width: 680px) {
+      header {
+        padding-top: 24px;
+      }
+
+      .grid,
+      .stats,
+      .stats-6,
+      .charts,
+      .charts-3,
+      .criteria-grid,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .hero {
+        padding: 20px;
+      }
+
+      .rating {
+        font-size: 11.5px;
+      }
+
+      .rating td,
+      .rating th {
+        padding: 8px 4px;
+      }
+
+      .submitbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .submitbar button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Subtle geometric network lines & nodes matching ExamNet login aesthetic -->
+<svg class="network-backdrop" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g stroke="#b6c6da" stroke-width="1" fill="none" opacity="0.75">
+    <line x1="120" y1="160" x2="310" y2="290"/>
+    <line x1="310" y1="290" x2="210" y2="520"/>
+    <line x1="310" y1="290" x2="540" y2="140"/>
+    <line x1="890" y1="120" x2="1080" y2="260"/>
+    <line x1="1080" y1="260" x2="960" y2="430"/>
+    <line x1="960" y1="430" x2="890" y2="120"/>
+    <line x1="1080" y1="260" x2="1320" y2="190"/>
+    <line x1="1180" y1="620" x2="1340" y2="780"/>
+    <line x1="1340" y1="780" x2="1090" y2="810"/>
+    <line x1="1090" y1="810" x2="1180" y2="620"/>
+    <line x1="140" y1="710" x2="290" y2="830"/>
+    <line x1="290" y1="830" x2="110" y2="860"/>
+    <line x1="110" y1="860" x2="140" y2="710"/>
+  </g>
+  <g>
+    <circle cx="120" cy="160" r="14" fill="url(#nodeGlow)"/>
+    <circle cx="120" cy="160" r="3" fill="#2563eb"/>
+    <circle cx="310" cy="290" r="16" fill="url(#nodeGlow)"/>
+    <circle cx="310" cy="290" r="3.5" fill="#1d4ed8"/>
+    <circle cx="210" cy="520" r="14" fill="url(#nodeGlow)"/>
+    <circle cx="210" cy="520" r="3" fill="#0284c7"/>
+    <circle cx="890" cy="120" r="14" fill="url(#nodeGlow)"/>
+    <circle cx="890" cy="120" r="3" fill="#2563eb"/>
+    <circle cx="1080" cy="260" r="16" fill="url(#nodeGlow)"/>
+    <circle cx="1080" cy="260" r="3.5" fill="#1d4ed8"/>
+    <circle cx="960" cy="430" r="12" fill="url(#nodeGlow)"/>
+    <circle cx="960" cy="430" r="2.5" fill="#3b82f6"/>
+    <circle cx="1320" cy="190" r="14" fill="url(#nodeGlow)"/>
+    <circle cx="1320" cy="190" r="3" fill="#0284c7"/>
+    <circle cx="1180" cy="620" r="15" fill="url(#nodeGlow)"/>
+    <circle cx="1180" cy="620" r="3" fill="#1d4ed8"/>
+    <circle cx="1340" cy="780" r="12" fill="url(#nodeGlow)"/>
+    <circle cx="1340" cy="780" r="2.5" fill="#2563eb"/>
+    <circle cx="140" cy="710" r="14" fill="url(#nodeGlow)"/>
+    <circle cx="140" cy="710" r="3" fill="#1d4ed8"/>
+  </g>
+</svg>
+
+<div class="app-shell">
+
+  <header>
+    <div class="brand">
+      <!-- ExamNet Shield + Graduation Cap Logo -->
+      <div class="logo-tile" aria-hidden="true">
+        <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="examnetShieldGrad" x1="6" y1="4" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#1D4ED8"/>
+              <stop offset="100%" stop-color="#0284C7"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 3.5L7 8.8V19.2C7 27.6 12.55 35.15 20 37.2C27.45 35.15 33 27.6 33 19.2V8.8L20 3.5Z" fill="url(#examnetShieldGrad)"/>
+          <path d="M20 12.5L11.5 16.3L20 20.1L28.5 16.3L20 12.5Z" fill="#FFFFFF"/>
+          <path d="M14.5 18.8V22.4C14.5 24.1 16.96 25.5 20 25.5C23.04 25.5 25.5 24.1 25.5 22.4V18.8L20 21.3L14.5 18.8Z" fill="#FFFFFF" fill-opacity="0.92"/>
+          <path d="M27.3 17.1V22.3" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="27.3" cy="22.8" r="1.1" fill="#FFFFFF"/>
+        </svg>
+      </div>
+
+      <div>
+        <h1 class="brand-wordmark">Exam<span>Net</span></h1>
+        <p class="brand-subtitle">Smart Examination System · Feedback Portal</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- STUDENT FORM -->
+    <section id="studentView">
+
+      <div class="hero">
+        <div class="hero-badge">Demo Examination · Feedback</div>
+        <h2>Share your ExamNet experience</h2>
+        <p>
+          Help us improve speed, stability, image loading, and the examination
+          experience. Please give honest feedback about the demo exam.
+        </p>
+      </div>
+
+      <form id="form">
+
+        <!-- STUDENT INFORMATION -->
+        <div class="card">
+          <h3 class="section"><span class="section-num">01</span> Student Information</h3>
+
+          <div class="grid">
+
+            <div class="field">
+              <label>Full name *</label>
+              <input id="name" type="text" required placeholder="Your full name">
+            </div>
+
+            <div class="field">
+              <label>Course & year *</label>
+              <input id="course" type="text" required placeholder="e.g., BSIS 2nd Year">
+            </div>
+
+            <div class="field">
+              <label>Room number *</label>
+              <input id="room" type="text" required placeholder="Room">
+            </div>
+
+            <div class="field">
+              <label>Device used *</label>
+              <select id="device" required>
+                <option value="">Select device</option>
+                <option>Android Phone</option>
+                <option>iPhone</option>
+                <option>Tablet</option>
+                <option>Laptop / PC</option>
+                <option>Other</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Internet connection *</label>
+              <select id="internet" required>
+                <option value="">Select</option>
+                <option>Wi-Fi</option>
+                <option>Mobile Data</option>
+                <option>Ethernet / Wired</option>
+                <option>Other</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- PERFORMANCE -->
+        <div class="card">
+          <h3 class="section"><span class="section-num">02</span> System Performance</h3>
+          <p class="small" style="margin-top:-8px;margin-bottom:12px;">Select one rating for each item.</p>
+
+          <table class="rating">
+            <thead>
+              <tr>
+                <th>Criteria</th>
+                <th>Excellent</th>
+                <th>Good</th>
+                <th>Fair</th>
+                <th>Poor</th>
+              </tr>
+            </thead>
+
+            <tbody id="ratingTable"></tbody>
+          </table>
+        </div>
+
+        <!-- TECHNICAL EXPERIENCE -->
+        <div class="card">
+          <h3 class="section"><span class="section-num">03</span> Technical Experience</h3>
+
+          <div class="field">
+            <label>Did you experience lag? *</label>
+            <div class="choices" id="lag"></div>
+          </div>
+
+          <div class="field">
+            <label>How fast did images load? *</label>
+            <div class="choices" id="imageSpeed"></div>
+          </div>
+
+          <div class="field">
+            <label>Which technical issues did you encounter? (Select all that apply)</label>
+            <div class="choices" id="issues"></div>
+          </div>
+
+          <div class="field">
+            <label>Were images missing, unclear, or distorted? *</label>
+            <div class="choices" id="missing"></div>
+          </div>
+
+          <div class="field">
+            <label>Did internet issues affect your exam? *</label>
+            <div class="choices" id="internetEffect"></div>
+          </div>
+        </div>
+
+        <!-- USER EXPERIENCE -->
+        <div class="card">
+          <h3 class="section"><span class="section-num">04</span> User Experience</h3>
+
+          <div class="field">
+            <label>Was ExamNet easy to use? *</label>
+            <div class="choices" id="ease"></div>
+          </div>
+
+          <div class="field">
+            <label>Were questions and choices easy to read? *</label>
+            <div class="choices" id="readability"></div>
+          </div>
+
+          <div class="field">
+            <label>Were you comfortable taking the exam using ExamNet? *</label>
+            <div class="choices" id="comfort"></div>
+          </div>
+        </div>
+
+        <!-- COMMENTS -->
+        <div class="card">
+          <h3 class="section"><span class="section-num">05</span> Comments & Suggestions</h3>
+
+          <div class="field">
+            <label>What feature did you like most?</label>
+            <textarea id="liked" placeholder="Optional"></textarea>
+          </div>
+
+          <div class="field">
+            <label>What problems or difficulties did you encounter?</label>
+            <textarea id="problems" placeholder="Optional"></textarea>
+          </div>
+
+          <div class="field">
+            <label>What improvements do you recommend?</label>
+            <textarea id="suggestions" placeholder="Optional"></textarea>
+          </div>
+
+          <div class="field">
+            <label>Additional feedback</label>
+            <textarea id="additional" placeholder="Optional"></textarea>
+          </div>
+
+          <div id="formNotice" class="notice"></div>
+
+          <div class="submitbar">
+            <span class="small">* Required fields</span>
+
+            <button class="btn primary" id="submit" type="submit">
+              Submit Feedback →
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- ADMIN DASHBOARD (Load via ?view=admin or #admin) -->
+    <section id="adminView" class="hidden">
+
+      <div class="hero">
+        <div class="hero-badge">Administrator Access</div>
+        <h2>Feedback Analytics</h2>
+        <p>Enter the administrator password to unlock feedback responses and analytics.</p>
+      </div>
+
+      <!-- ADMIN LOGIN -->
+      <div class="card" id="loginCard">
+        <h3 class="section">Administrator Login</h3>
+
+        <div class="field">
+          <label>Administrator Password</label>
+          <input
+            id="adminPassword"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Enter dashboard password"
+            onkeydown="if(event.key==='Enter')login()"
+          >
+        </div>
+
+        <div id="loginNotice" class="notice"></div>
+
+        <button class="btn primary" onclick="login()">
+          Unlock Dashboard
+        </button>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="dashboard" class="hidden">
+
+        <div class="dash-header">
+          <h2 class="section" style="margin:0;">Dashboard Overview</h2>
+
+          <div class="dash-actions">
+            <button class="btn secondary" onclick="exportCSV()">Export CSV</button>
+            <button class="btn secondary" onclick="loadData()">Refresh</button>
+            <button class="btn danger" id="resetFeedbackBtn" onclick="openResetModal()">Reset Test Feedback</button>
+            <button class="btn danger" onclick="logout()">Lock / Logout</button>
+          </div>
+        </div>
+
+        <!-- STATISTICS (Covers Performance, Technical & UX) -->
+        <div class="stats stats-6">
+
+          <div class="stat">
+            <small>Total responses</small>
+            <strong id="total">0</strong>
+          </div>
+
+          <div class="stat">
+            <small>Avg. performance rating</small>
+            <strong id="avgPerf">—</strong>
+          </div>
+
+          <div class="stat">
+            <small>Lag reports</small>
+            <strong id="lagCount">0</strong>
+          </div>
+
+          <div class="stat">
+            <small>Slow / missing image reports</small>
+            <strong id="imgCount">0</strong>
+          </div>
+
+          <div class="stat">
+            <small>Internet affected exam</small>
+            <strong id="netImpactCount">0</strong>
+          </div>
+
+          <div class="stat">
+            <small>Comfortable & easy (Yes / Easy+)</small>
+            <strong id="uxPositiveCount">0</strong>
+          </div>
+
+        </div>
+
+        <!-- SECTION 02: SYSTEM PERFORMANCE BREAKDOWN -->
+        <div class="card">
+          <h3 class="section"><span class="section-num">02</span> System Performance Ratings by Criteria</h3>
+          <p class="small" style="margin-top:-8px;margin-bottom:14px;">
+            Average score out of 4.00 (Excellent = 4, Good = 3, Fair = 2, Poor = 1) across filtered responses.
+          </p>
+          <div id="criteriaBreakdown" class="criteria-grid"></div>
+        </div>
+
+        <!-- SECTION 03 & 04: TECHNICAL & USER EXPERIENCE CHARTS -->
+        <div class="charts-3">
+
+          <div class="card" style="margin-bottom:0;">
+            <h3 class="section">Lag experience</h3>
+            <div class="chartbox">
+              <canvas id="lagGraph"></canvas>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:0;">
+            <h3 class="section">Image loading speed</h3>
+            <div class="chartbox">
+              <canvas id="imageGraph"></canvas>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:0;">
+            <h3 class="section">Technical issues</h3>
+            <div class="chartbox">
+              <canvas id="issuesGraph"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="charts" style="margin-bottom:18px;">
+
+          <div class="card" style="margin-bottom:0;">
+            <h3 class="section">Internet impact & missing images</h3>
+            <div class="chartbox">
+              <canvas id="netGraph"></canvas>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:0;">
+            <h3 class="section">User experience (Ease, Readability, Comfort)</h3>
+            <div class="chartbox">
+              <canvas id="uxGraph"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RESPONSE TABLE WITH FULL QUESTION FILTERS -->
+        <div class="card">
+          <h3 class="section">Student Responses</h3>
+
+          <div class="toolbar">
+            <input id="search" placeholder="Search name, course, or comments" oninput="applyFilters()">
+
+            <select id="roomFilter" onchange="applyFilters()">
+              <option value="">All rooms</option>
+            </select>
+
+            <select id="deviceFilter" onchange="applyFilters()">
+              <option value="">All devices</option>
+            </select>
+
+            <select id="internetFilter" onchange="applyFilters()">
+              <option value="">All connections</option>
+            </select>
+
+            <select id="issueFilter" onchange="applyFilters()">
+              <option value="">All issues</option>
+            </select>
+
+            <select id="easeFilter" onchange="applyFilters()">
+              <option value="">All ease ratings</option>
+            </select>
+
+            <select id="comfortFilter" onchange="applyFilters()">
+              <option value="">All comfort answers</option>
+            </select>
+          </div>
+
+          <div class="scroll">
+            <table class="responses">
+              <thead>
+                <tr>
+                  <th>Name / Course</th>
+                  <th>Room / Net</th>
+                  <th>Device</th>
+                  <th>Lag / Images</th>
+                  <th>Issues & Missing Img</th>
+                  <th>Ease / Read / Comfort</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- SECTION 05: QUALITATIVE COMMENTS & SUGGESTIONS -->
+        <div class="card">
+          <h3 class="section"><span class="section-num">05</span> Comments & Suggestions</h3>
+          <p class="small" style="margin-top:-8px;margin-bottom:14px;">
+            Responses for liked features, problems encountered, recommended improvements, and additional feedback.
+          </p>
+          <div id="commentsSummary"></div>
+        </div>
+      </div>
+
+      <div id="adminNotice" class="notice"></div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <strong>LAN and online ready</strong>
+    Developed by Dexter M. Padilla · ExamNet Feedback Portal
+  </footer>
+
+</div>
+
+<!-- FEEDBACK DETAILS MODAL -->
+<div
+  id="modal"
+  class="modal hidden"
+  onclick="if(event.target===this)closeDetail()"
+>
+  <div class="modalbox">
+
+    <button
+      class="btn secondary"
+      style="float:right"
+      onclick="closeDetail()"
+    >
+      Close
+    </button>
+
+    <h3 id="modalTitle" class="section">Feedback details</h3>
+
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+
+
+
+<!-- RESET TEST FEEDBACK CONFIRMATION MODAL -->
+<div
+  id="resetModal"
+  class="modal hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="resetModalTitle"
+  onclick="if(event.target===this)closeResetModal()"
+>
+  <div class="modalbox" style="width:min(460px,100%);">
+    <h3 id="resetModalTitle" class="section" style="color:#991b1b;margin-bottom:8px;">
+      Reset All Test Feedback?
+    </h3>
+    <p class="small" style="margin:0 0 14px;line-height:1.55;">
+      This will permanently delete <strong>all</strong> student feedback rows currently in <code>examnet_feedback</code> so you can start fresh after testing. This action cannot be undone.
+    </p>
+    <div class="field">
+      <label for="resetConfirmInput">Type <strong>RESET</strong> to confirm</label>
+      <input
+        id="resetConfirmInput"
+        type="text"
+        placeholder="Type RESET"
+        autocomplete="off"
+        oninput="toggleResetSubmit()"
+        onkeydown="if(event.key==='Enter'&&!document.getElementById('confirmResetBtn').disabled)confirmResetFeedback()"
+      >
+    </div>
+    <div id="resetNotice" class="notice"></div>
+    <div class="submitbar" style="margin-top:14px;padding-top:12px;">
+      <button type="button" class="btn secondary" onclick="closeResetModal()">Cancel</button>
+      <button type="button" class="btn danger" id="confirmResetBtn" onclick="confirmResetFeedback()" disabled>
+        Delete All Feedback
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- THANK YOU CONFIRMATION MODAL -->
+<div
+  id="thankYouModal"
+  class="modal hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="thankYouTitle"
+  onclick="if(event.target===this)closeThankYouModal()"
+>
+  <div class="thankyou-box">
+    <div class="thankyou-icon" aria-hidden="true">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+
+    <h3 id="thankYouTitle">Feedback Submitted!</h3>
+    <p id="thankYouMessage">
+      Thank you for sharing your ExamNet experience. Your response has been recorded and will help improve the examination system.
+    </p>
+
+    <button type="button" class="btn primary" onclick="closeThankYouModal()">
+      Done
+    </button>
+  </div>
+</div>
+
+<script>
+
+  // ============================================
+  // SUPABASE CONFIGURATION
+  // ============================================
+
+  const SUPABASE_URL =
+    'https://zsqtpnrqopedyrftggvs.supabase.co';
+
+  const SUPABASE_ANON_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzcXRwbnJxb3BlZHlyZnRnZ3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU2MTU5MDgsImV4cCI6MjExMTE5MTkwOH0.-pmcdhZGkkBxt7At8Zn0LxTMEGUGqY2iEzGawhJlVek';
+
+  const db =
+    (SUPABASE_URL.startsWith('https://') &&
+    !SUPABASE_URL.includes('YOUR_') &&
+    !SUPABASE_ANON_KEY.includes('YOUR_'))
+      ? window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_ANON_KEY
+        )
+      : null;
+
+
+  // ============================================
+  // QUESTIONS AND OPTIONS
+  // ============================================
+
+  const criteria = [
+    'Login/accessing exam',
+    'Loading questions',
+    'Loading question images',
+    'Navigation between questions',
+    'Selecting/changing answers',
+    'Scrolling',
+    'Saving/recording answers',
+    'Overall responsiveness'
+  ];
+
+  const options = {
+
+    lag: [
+      'No lag — smooth',
+      'Minor lag',
+      'Moderate lag',
+      'Severe lag'
+    ],
+
+    imageSpeed: [
+      'Very fast — immediate',
+      'Fast — slight delay',
+      'Slow — noticeable delay',
+      'Very slow',
+      'Some images did not load'
+    ],
+
+    issues: [
+      'System froze/unresponsive',
+      'Questions loaded slowly',
+      'Images delayed/missing',
+      'Answer selection delayed',
+      'Disconnected',
+      'Unexpected logout',
+      'Difficult layout/navigation',
+      'No issues',
+      'Other'
+    ],
+
+    missing: [
+      'No',
+      'Yes'
+    ],
+
+    internetEffect: [
+      'No',
+      'Yes, but I continued',
+      'Yes, it affected my exam'
+    ],
+
+    ease: [
+      'Very easy',
+      'Easy',
+      'Neutral',
+      'Difficult',
+      'Very difficult'
+    ],
+
+    readability: [
+      'Yes',
+      'No',
+      'Some parts difficult to read'
+    ],
+
+    comfort: [
+      'Yes',
+      'No',
+      'Somewhat'
+    ]
+
+  };
+
+
+  // ============================================
+  // VARIABLES
+  // ============================================
+
+  let records = [];
+  let filteredRecords = [];
+  let lagChart = null;
+  let imageChart = null;
+  let issuesChart = null;
+  let netChart = null;
+  let uxChart = null;
+  let adminPass = '';
+
+  const RATING_WEIGHTS = {
+    'Excellent': 4,
+    'Good': 3,
+    'Fair': 2,
+    'Poor': 1
+  };
+
+
+  // ============================================
+  // ELEMENT REFERENCES
+  // ============================================
+
+  const studentView = document.getElementById('studentView');
+  const adminView = document.getElementById('adminView');
+
+  const form = document.getElementById('form');
+
+  const loginCard = document.getElementById('loginCard');
+  const dashboard = document.getElementById('dashboard');
+
+  const roomFilter = document.getElementById('roomFilter');
+  const deviceFilter = document.getElementById('deviceFilter');
+  const internetFilter = document.getElementById('internetFilter');
+  const issueFilter = document.getElementById('issueFilter');
+  const easeFilter = document.getElementById('easeFilter');
+  const comfortFilter = document.getElementById('comfortFilter');
+  const search = document.getElementById('search');
+
+  const tbody = document.getElementById('tbody');
+
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+
+
+  // ============================================
+  // HELPER FUNCTIONS
+  // ============================================
+
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c]));
+  }
+
+
+  function makeOptions(id, arr, multi = false, required = false) {
+
+    const container = document.getElementById(id);
+
+    container.innerHTML = arr.map((value, index) => `
+      <label class="choice">
+
+        <input
+          type="${multi ? 'checkbox' : 'radio'}"
+          name="${id}"
+          value="${esc(value)}"
+          ${required && index === 0 ? 'required' : ''}
+        >
+
+        ${esc(value)}
+
+      </label>
+    `).join('');
+
+  }
+
+
+  function selected(name) {
+    return document.querySelector(
+      `input[name="${name}"]:checked`
+    )?.value || '';
+  }
+
+
+  function checked(name) {
+    return [
+      ...document.querySelectorAll(
+        `input[name="${name}"]:checked`
+      )
+    ].map(el => el.value);
+  }
+
+
+  function get(id) {
+    return document.getElementById(id).value.trim();
+  }
+
+
+  function notice(id, message, type) {
+
+    const element = document.getElementById(id);
+
+    element.textContent = message;
+    element.className = 'notice ' + type;
+
+  }
+
+
+  // ============================================
+  // URL-BASED VIEW ROUTING
+  // ============================================
+
+  function getViewFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const queryView = (params.get('view') || params.get('page') || '').trim().toLowerCase();
+    const hashView = window.location.hash.replace(/^#/, '').trim().toLowerCase();
+    const target = queryView || hashView;
+
+    return (target === 'admin' || target === 'dashboard') ? 'admin' : 'student';
+  }
+
+  function switchView(view) {
+
+    const activeView = view === 'admin' ? 'admin' : 'student';
+
+    studentView.classList.toggle(
+      'hidden',
+      activeView !== 'student'
+    );
+
+    adminView.classList.toggle(
+      'hidden',
+      activeView !== 'admin'
+    );
+
+  }
+
+  function syncViewWithUrl() {
+    switchView(getViewFromUrl());
+  }
+
+  window.addEventListener('DOMContentLoaded', syncViewWithUrl);
+  window.addEventListener('hashchange', syncViewWithUrl);
+  window.addEventListener('popstate', syncViewWithUrl);
+  syncViewWithUrl();
+
+
+  // ============================================
+  // GENERATE PERFORMANCE RATING TABLE
+  // ============================================
+
+  document.getElementById('ratingTable').innerHTML =
+    criteria.map((criterion, i) => `
+
+      <tr>
+
+        <td>${esc(criterion)}</td>
+
+        ${['Excellent','Good','Fair','Poor'].map(rating => `
+
+          <td>
+            <input
+              type="radio"
+              name="rate${i}"
+              value="${rating}"
+              required
+              aria-label="${esc(criterion)} ${rating}"
+            >
+          </td>
+
+        `).join('')}
+
+      </tr>
+
+    `).join('');
+
+
+  // ============================================
+  // GENERATE FORM OPTIONS
+  // ============================================
+
+  Object.entries(options).forEach(([id, arr]) => {
+
+    const isMultiple = id === 'issues';
+
+    const isRequired = [
+      'lag',
+      'imageSpeed',
+      'missing',
+      'internetEffect',
+      'ease',
+      'readability',
+      'comfort'
+    ].includes(id);
+
+    makeOptions(
+      id,
+      arr,
+      isMultiple,
+      isRequired
+    );
+
+  });
+
+
+  // ============================================
+  // STUDENT FORM SUBMISSION
+  // ============================================
+
+  form.addEventListener('submit', async event => {
+
+    event.preventDefault();
+
+    const button = document.getElementById('submit');
+
+    button.disabled = true;
+    button.textContent = 'Sending…';
+
+
+    // Check Supabase configuration
+
+    if (!db) {
+
+      notice(
+        'formNotice',
+        'Portal setup is incomplete. Please check the Supabase configuration.',
+        'error'
+      );
+
+      button.disabled = false;
+      button.textContent = 'Submit Feedback →';
+
+      return;
+
+    }
+
+
+    // Performance ratings
+
+    const ratingDetails = {};
+
+    criteria.forEach((criterion, i) => {
+
+      ratingDetails[criterion] =
+        selected('rate' + i);
+
+    });
+
+
+    // Feedback payload
+
+    const payload = {
+
+      full_name: get('name'),
+
+      course_year: get('course'),
+
+      room_number: get('room'),
+
+      device: get('device'),
+
+      internet: get('internet'),
+
+      rating_details: ratingDetails,
+
+      lag: selected('lag'),
+
+      image_speed: selected('imageSpeed'),
+
+      issues: checked('issues'),
+
+      images_missing: selected('missing'),
+
+      internet_impact: selected('internetEffect'),
+
+      ease_of_use: selected('ease'),
+
+      readability: selected('readability'),
+
+      comfort: selected('comfort'),
+
+      liked: get('liked'),
+
+      problems: get('problems'),
+
+      suggestions: get('suggestions'),
+
+      additional: get('additional')
+
+    };
+
+
+    try {
+
+      const { error } = await db
+        .from('examnet_feedback')
+        .insert(payload);
+
+
+      if (error) {
+
+        notice(
+          'formNotice',
+          'Could not submit: ' + error.message,
+          'error'
+        );
+
+      } else {
+
+        const submittedName = get('name');
+        form.reset();
+
+        const formNoticeEl = document.getElementById('formNotice');
+        formNoticeEl.textContent = '';
+        formNoticeEl.className = 'notice';
+
+        openThankYouModal(submittedName);
+
+      }
+
+    } catch (error) {
+
+      notice(
+        'formNotice',
+        'Unexpected error: ' + error.message,
+        'error'
+      );
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent = 'Submit Feedback →';
+
+    }
+
+  });
+
+
+  // ============================================
+  // ADMIN LOGIN
+  // ============================================
+
+  async function login() {
+
+    if (!db) {
+
+      notice(
+        'loginNotice',
+        'Supabase configuration is missing. Please check the setup.',
+        'error'
+      );
+
+      return;
+
+    }
+
+
+    const pass =
+      document.getElementById('adminPassword').value;
+
+
+    if (!pass) {
+
+      notice(
+        'loginNotice',
+        'Enter your administrator password.',
+        'error'
+      );
+
+      return;
+
+    }
+
+
+    const button =
+      document.querySelector('#loginCard button');
+
+    button.disabled = true;
+    button.textContent = 'Checking…';
+
+
+    try {
+
+      const { data, error } = await db.rpc(
+        'examnet_admin_feedback',
+        {
+          p_password: pass
+        }
+      );
+
+
+      if (error || !data) {
+
+        notice(
+          'loginNotice',
+          'Password incorrect or database setup incomplete.',
+          'error'
+        );
+
+        return;
+
+      }
+
+
+      adminPass = pass;
+
+      records = Array.isArray(data) ? data : [];
+
+      loginCard.classList.add('hidden');
+
+      dashboard.classList.remove('hidden');
+
+      document.getElementById('adminPassword').value = '';
+
+      populateFilters();
+
+      applyFilters();
+
+    } catch (error) {
+
+      notice(
+        'loginNotice',
+        'Login error: ' + error.message,
+        'error'
+      );
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent = 'Unlock Dashboard';
+
+    }
+
+  }
+
+
+  // ============================================
+  // ADMIN LOGOUT
+  // ============================================
+
+  async function logout() {
+
+    adminPass = '';
+
+    records = [];
+
+    loginCard.classList.remove('hidden');
+
+    dashboard.classList.add('hidden');
+
+    document.getElementById('adminPassword').value = '';
+
+
+    [lagChart, imageChart, issuesChart, netChart, uxChart].forEach(c => {
+      if (c) c.destroy();
+    });
+    lagChart = imageChart = issuesChart = netChart = uxChart = null;
+    filteredRecords = [];
+
+  }
+
+
+  // ============================================
+  // REFRESH DASHBOARD
+  // ============================================
+
+  async function loadData() {
+
+    if (!db || !adminPass) return;
+
+
+    try {
+
+      const { data, error } = await db.rpc(
+        'examnet_admin_feedback',
+        {
+          p_password: adminPass
+        }
+      );
+
+
+      if (error || !data) {
+
+        notice(
+          'adminNotice',
+          'Could not load dashboard. Please lock and log in again.',
+          'error'
+        );
+
+        return;
+
+      }
+
+
+      records = Array.isArray(data) ? data : [];
+
+      populateFilters();
+
+      applyFilters();
+
+
+      notice(
+        'adminNotice',
+        'Dashboard refreshed.',
+        'success'
+      );
+
+    } catch (error) {
+
+      notice(
+        'adminNotice',
+        'Refresh error: ' + error.message,
+        'error'
+      );
+
+    }
+
+  }
+
+
+  // ============================================
+  // FILTERS & ANALYTICS ENGINE
+  // ============================================
+
+  function populateFilters() {
+    const roomValues = [...new Set(records.map(x => x.room_number).filter(Boolean))];
+    const deviceValues = [...new Set(records.map(x => x.device).filter(Boolean))];
+    const internetValues = [...new Set(records.map(x => x.internet).filter(Boolean))];
+
+    const prevRoom = roomFilter.value;
+    const prevDevice = deviceFilter.value;
+    const prevInternet = internetFilter.value;
+    const prevIssue = issueFilter.value;
+    const prevEase = easeFilter.value;
+    const prevComfort = comfortFilter.value;
+
+    roomFilter.innerHTML = '<option value="">All rooms</option>' +
+      roomValues.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+
+    deviceFilter.innerHTML = '<option value="">All devices</option>' +
+      deviceValues.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+
+    internetFilter.innerHTML = '<option value="">All connections</option>' +
+      internetValues.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+
+    issueFilter.innerHTML = '<option value="">All issues</option>' +
+      options.issues.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+
+    easeFilter.innerHTML = '<option value="">All ease ratings</option>' +
+      options.ease.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+
+    comfortFilter.innerHTML = '<option value="">All comfort answers</option>' +
+      options.comfort.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+
+    roomFilter.value = prevRoom;
+    deviceFilter.value = prevDevice;
+    internetFilter.value = prevInternet;
+    issueFilter.value = prevIssue;
+    easeFilter.value = prevEase;
+    comfortFilter.value = prevComfort;
+  }
+
+  function applyFilters() {
+    const q = (search.value || '').trim().toLowerCase();
+    const room = roomFilter.value;
+    const device = deviceFilter.value;
+    const internet = internetFilter.value;
+    const issue = issueFilter.value;
+    const ease = easeFilter.value;
+    const comfort = comfortFilter.value;
+
+    filteredRecords = records.filter(x => {
+      const textMatch = !q || [
+        x.full_name,
+        x.course_year,
+        x.room_number,
+        x.device,
+        x.internet,
+        x.liked,
+        x.problems,
+        x.suggestions,
+        x.additional
+      ].some(val => String(val || '').toLowerCase().includes(q));
+
+      return textMatch &&
+        (!room || String(x.room_number) === room) &&
+        (!device || x.device === device) &&
+        (!internet || x.internet === internet) &&
+        (!issue || (Array.isArray(x.issues) && x.issues.includes(issue))) &&
+        (!ease || x.ease_of_use === ease) &&
+        (!comfort || x.comfort === comfort);
+    });
+
+    updateStats(filteredRecords);
+    renderCriteriaBreakdown(filteredRecords);
+    renderTable(filteredRecords);
+    renderCommentsSummary(filteredRecords);
+    charts(filteredRecords);
+  }
+
+  function updateStats(rows) {
+    document.getElementById('total').textContent = rows.length;
+
+    document.getElementById('lagCount').textContent =
+      rows.filter(x => x.lag && x.lag !== 'No lag — smooth').length;
+
+    document.getElementById('imgCount').textContent =
+      rows.filter(x =>
+        ['Slow — noticeable delay', 'Very slow', 'Some images did not load'].includes(x.image_speed) ||
+        x.images_missing === 'Yes'
+      ).length;
+
+    document.getElementById('netImpactCount').textContent =
+      rows.filter(x => x.internet_impact && x.internet_impact !== 'No').length;
+
+    const positiveUx = rows.filter(x =>
+      ['Very easy', 'Easy'].includes(x.ease_of_use) && x.comfort === 'Yes'
+    ).length;
+    document.getElementById('uxPositiveCount').textContent =
+      rows.length ? `${positiveUx} / ${rows.length}` : '0';
+
+    let totalPoints = 0;
+    let totalRatedItems = 0;
+    rows.forEach(r => {
+      const rd = r.rating_details || {};
+      criteria.forEach(c => {
+        const w = RATING_WEIGHTS[rd[c]];
+        if (w) {
+          totalPoints += w;
+          totalRatedItems += 1;
+        }
+      });
+    });
+    document.getElementById('avgPerf').textContent =
+      totalRatedItems ? `${(totalPoints / totalRatedItems).toFixed(2)} / 4` : '—';
+  }
+
+  function renderCriteriaBreakdown(rows) {
+    const container = document.getElementById('criteriaBreakdown');
+    if (!rows.length) {
+      container.innerHTML = '<p class="small">No responses match the active filters.</p>';
+      return;
+    }
+
+    container.innerHTML = criteria.map(crit => {
+      const counts = { Excellent: 0, Good: 0, Fair: 0, Poor: 0 };
+      let sum = 0;
+      let n = 0;
+
+      rows.forEach(r => {
+        const val = (r.rating_details || {})[crit];
+        if (val && counts[val] !== undefined) {
+          counts[val] += 1;
+          sum += RATING_WEIGHTS[val];
+          n += 1;
+        }
+      });
+
+      const avg = n ? (sum / n).toFixed(2) : '—';
+
+      return `
+        <div class="criteria-item">
+          <div class="criteria-top">
+            <span class="criteria-name">${esc(crit)}</span>
+            <span class="criteria-score">Avg: ${avg}</span>
+          </div>
+          <div class="rating-pills">
+            <span class="rating-pill">Excellent: ${counts.Excellent}</span>
+            <span class="rating-pill">Good: ${counts.Good}</span>
+            <span class="rating-pill">Fair: ${counts.Fair}</span>
+            <span class="rating-pill">Poor: ${counts.Poor}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderTable(rows) {
+    tbody.innerHTML = rows.map(x => {
+      const issuesList = Array.isArray(x.issues) && x.issues.length
+        ? x.issues.join(', ')
+        : '—';
+      const missingBadge = x.images_missing === 'Yes' ? ' · Missing/Unclear: Yes' : '';
+
+      return `
+        <tr>
+          <td>
+            <b>${esc(x.full_name)}</b>
+            <br>
+            <small>${esc(x.course_year)}</small>
+          </td>
+
+          <td>
+            ${esc(x.room_number)}
+            <br>
+            <small>${esc(x.internet || '—')}</small>
+          </td>
+
+          <td>
+            <span class="pill">${esc(x.device)}</span>
+          </td>
+
+          <td>
+            ${esc(x.lag || '—')}
+            <br>
+            <small>${esc(x.image_speed || '—')}</small>
+          </td>
+
+          <td>
+            <small>${esc(issuesList + missingBadge)}</small>
+          </td>
+
+          <td>
+            <small>
+              Ease: <b>${esc(x.ease_of_use || '—')}</b><br>
+              Read: ${esc(x.readability || '—')} · Comfort: <b>${esc(x.comfort || '—')}</b>
+            </small>
+          </td>
+
+          <td>
+            <small>${x.created_at ? new Date(x.created_at).toLocaleString() : ''}</small>
+          </td>
+
+          <td>
+            <button class="btn secondary" onclick="detail('${esc(x.id)}')">
+              View
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="8">No feedback matches.</td></tr>';
+  }
+
+  function renderCommentsSummary(rows) {
+    const box = document.getElementById('commentsSummary');
+    const withComments = rows.filter(r =>
+      r.liked || r.problems || r.suggestions || r.additional
+    );
+
+    if (!withComments.length) {
+      box.innerHTML = '<p class="small">No written comments or suggestions in the current filter view.</p>';
+      return;
+    }
+
+    box.innerHTML = withComments.map(r => {
+      const parts = [];
+      if (r.liked) parts.push(`<div><b>Liked most:</b> ${esc(r.liked)}</div>`);
+      if (r.problems) parts.push(`<div><b>Problems:</b> ${esc(r.problems)}</div>`);
+      if (r.suggestions) parts.push(`<div><b>Improvements:</b> ${esc(r.suggestions)}</div>`);
+      if (r.additional) parts.push(`<div><b>Additional:</b> ${esc(r.additional)}</div>`);
+
+      return `
+        <div class="comment-box">
+          <div class="comment-meta">
+            <b>${esc(r.full_name)}</b> (${esc(r.course_year)} · Room ${esc(r.room_number)} · ${esc(r.device)})
+          </div>
+          <div class="comment-text">${parts.join('')}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function charts(rows) {
+    [lagChart, imageChart, issuesChart, netChart, uxChart].forEach(c => {
+      if (c) c.destroy();
+    });
+
+    const baseOpts = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    };
+
+    lagChart = new Chart(document.getElementById('lagGraph'), {
+      type: 'bar',
+      data: {
+        labels: options.lag,
+        datasets: [{
+          label: 'Students',
+          data: options.lag.map(v => rows.filter(x => x.lag === v).length),
+          backgroundColor: '#1d4ed8',
+          borderRadius: 6
+        }]
+      },
+      options: baseOpts
+    });
+
+    imageChart = new Chart(document.getElementById('imageGraph'), {
+      type: 'bar',
+      data: {
+        labels: options.imageSpeed,
+        datasets: [{
+          label: 'Students',
+          data: options.imageSpeed.map(v => rows.filter(x => x.image_speed === v).length),
+          backgroundColor: '#0284c7',
+          borderRadius: 6
+        }]
+      },
+      options: baseOpts
+    });
+
+    issuesChart = new Chart(document.getElementById('issuesGraph'), {
+      type: 'bar',
+      data: {
+        labels: options.issues,
+        datasets: [{
+          label: 'Mentions',
+          data: options.issues.map(v => rows.filter(x => Array.isArray(x.issues) && x.issues.includes(v)).length),
+          backgroundColor: '#2563eb',
+          borderRadius: 6
+        }]
+      },
+      options: baseOpts
+    });
+
+    const netLabels = [
+      ...options.internetEffect.map(v => `Net: ${v}`),
+      ...options.missing.map(v => `Img Missing: ${v}`)
+    ];
+    const netCounts = [
+      ...options.internetEffect.map(v => rows.filter(x => x.internet_impact === v).length),
+      ...options.missing.map(v => rows.filter(x => x.images_missing === v).length)
+    ];
+
+    netChart = new Chart(document.getElementById('netGraph'), {
+      type: 'bar',
+      data: {
+        labels: netLabels,
+        datasets: [{
+          label: 'Students',
+          data: netCounts,
+          backgroundColor: '#0369a1',
+          borderRadius: 6
+        }]
+      },
+      options: baseOpts
+    });
+
+    const uxLabels = ['Ease: Very easy/Easy', 'Readability: Yes', 'Comfort: Yes'];
+    const uxCounts = [
+      rows.filter(x => ['Very easy', 'Easy'].includes(x.ease_of_use)).length,
+      rows.filter(x => x.readability === 'Yes').length,
+      rows.filter(x => x.comfort === 'Yes').length
+    ];
+
+    uxChart = new Chart(document.getElementById('uxGraph'), {
+      type: 'bar',
+      data: {
+        labels: uxLabels,
+        datasets: [{
+          label: 'Students',
+          data: uxCounts,
+          backgroundColor: '#1e40af',
+          borderRadius: 6
+        }]
+      },
+      options: baseOpts
+    });
+  }
+
+  function detail(id) {
+    const record = records.find(item => String(item.id) === String(id));
+    if (!record) return;
+
+    modalTitle.textContent = 'Feedback: ' + (record.full_name || 'Student');
+
+    const rd = record.rating_details || {};
+    const ratingRowsHtml = criteria.map(crit => `
+      <div class="detail-row">
+        <strong>${esc(crit)}</strong>
+        <span>${esc(rd[crit] || '—')}</span>
+      </div>
+    `).join('');
+
+    const infoHtml = [
+      ['Course / Year', record.course_year],
+      ['Room Number', record.room_number],
+      ['Device Used', record.device],
+      ['Internet Connection', record.internet],
+      ['Lag Experience', record.lag],
+      ['Image Loading Speed', record.image_speed],
+      ['Technical Issues', (record.issues || []).join(', ') || '—'],
+      ['Images Missing / Unclear', record.images_missing],
+      ['Internet Impact on Exam', record.internet_impact],
+      ['Ease of Use', record.ease_of_use],
+      ['Readability of Questions/Choices', record.readability],
+      ['Comfort Taking Exam', record.comfort],
+      ['Submitted At', record.created_at ? new Date(record.created_at).toLocaleString() : '—']
+    ].map(([label, value]) => `
+      <div class="detail-row">
+        <strong>${esc(label)}</strong>
+        <span>${esc(value || '—')}</span>
+      </div>
+    `).join('');
+
+    const commentsHtml = [
+      ['Feature Liked Most', record.liked],
+      ['Problems / Difficulties', record.problems],
+      ['Recommended Improvements', record.suggestions],
+      ['Additional Feedback', record.additional]
+    ].map(([label, value]) => `
+      <p style="margin:8px 0;">
+        <strong>${esc(label)}</strong><br>
+        ${esc(value || '—').replace(/\n/g, '<br>')}
+      </p>
+    `).join('');
+
+    modalBody.innerHTML = `
+      <div class="detail-section-title">01 · Student & Technical Context</div>
+      <div class="detail-grid">${infoHtml}</div>
+      <div class="detail-section-title">02 · System Performance Ratings</div>
+      <div class="detail-grid">${ratingRowsHtml}</div>
+      <div class="detail-section-title">05 · Comments & Suggestions</div>
+      ${commentsHtml}
+    `;
+
+    modal.classList.remove('hidden');
+  }
+
+  // ============================================
+  // THANK YOU MODAL
+  // ============================================
+
+  const thankYouModal = document.getElementById('thankYouModal');
+  const thankYouMessage = document.getElementById('thankYouMessage');
+
+  function openThankYouModal(studentName) {
+    thankYouMessage.textContent = studentName
+      ? `Thank you, ${studentName}! Your ExamNet feedback has been recorded and will help improve the examination system.`
+      : 'Thank you for sharing your ExamNet experience. Your response has been recorded and will help improve the examination system.';
+    thankYouModal.classList.remove('hidden');
+  }
+
+  function closeThankYouModal() {
+    thankYouModal.classList.add('hidden');
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      if (!resetModal.classList.contains('hidden')) {
+        closeResetModal();
+      }
+      if (!thankYouModal.classList.contains('hidden')) {
+        closeThankYouModal();
+      }
+      if (!modal.classList.contains('hidden')) {
+        closeDetail();
+      }
+    }
+  });
+
+  // ============================================
+  // CLOSE MODAL
+  // ============================================
+
+  function closeDetail() {
+
+    modal.classList.add('hidden');
+
+  }
+
+
+  // ============================================
+  // EXPORT CSV
+  // ============================================
+
+  function exportCSV() {
+    const sourceRows = filteredRecords.length ? filteredRecords : records;
+
+    const columns = [
+      'Name',
+      'Course/Year',
+      'Room',
+      'Device',
+      'Internet',
+      ...criteria.map(c => `Rating: ${c}`),
+      'Lag',
+      'Image speed',
+      'Issues',
+      'Images missing',
+      'Internet impact',
+      'Ease',
+      'Readability',
+      'Comfort',
+      'Liked',
+      'Problems',
+      'Suggestions',
+      'Additional',
+      'Submitted'
+    ];
+
+    const rows = sourceRows.map(x => {
+      const rd = x.rating_details || {};
+      return [
+        x.full_name,
+        x.course_year,
+        x.room_number,
+        x.device,
+        x.internet,
+        ...criteria.map(c => rd[c] || ''),
+        x.lag,
+        x.image_speed,
+        (x.issues || []).join(';'),
+        x.images_missing,
+        x.internet_impact,
+        x.ease_of_use,
+        x.readability,
+        x.comfort,
+        x.liked,
+        x.problems,
+        x.suggestions,
+        x.additional,
+        x.created_at
+      ];
+    });
+
+
+    const csv = [columns, ...rows]
+
+      .map(row =>
+
+        row.map(value =>
+
+          '"' +
+          String(value ?? '')
+            .replace(/"/g, '""') +
+          '"'
+
+        ).join(',')
+
+      )
+
+      .join('\r\n');
+
+
+    const blob = new Blob(
+
+      ['\ufeff' + csv],
+
+      {
+        type: 'text/csv;charset=utf-8'
+      }
+
+    );
+
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+
+
+    link.href = url;
+
+    link.download = 'ExamNet_Feedback.csv';
+
+    link.click();
+
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  }
+
+
+
+  // ============================================
+  // RESET ALL TEST FEEDBACK (ADMIN)
+  // ============================================
+
+  const resetModal = document.getElementById('resetModal');
+  const resetConfirmInput = document.getElementById('resetConfirmInput');
+  const confirmResetBtn = document.getElementById('confirmResetBtn');
+
+  function openResetModal() {
+    if (!db || !adminPass) {
+      notice('adminNotice', 'Please unlock the dashboard first.', 'error');
+      return;
+    }
+    resetConfirmInput.value = '';
+    confirmResetBtn.disabled = true;
+    confirmResetBtn.textContent = 'Delete All Feedback';
+    const rNotice = document.getElementById('resetNotice');
+    rNotice.textContent = '';
+    rNotice.className = 'notice';
+    resetModal.classList.remove('hidden');
+    setTimeout(() => resetConfirmInput.focus(), 40);
+  }
+
+  function closeResetModal() {
+    resetModal.classList.add('hidden');
+    resetConfirmInput.value = '';
+    confirmResetBtn.disabled = true;
+  }
+
+  function toggleResetSubmit() {
+    confirmResetBtn.disabled = resetConfirmInput.value.trim() !== 'RESET';
+  }
+
+  async function confirmResetFeedback() {
+    if (!db || !adminPass) {
+      notice('resetNotice', 'Session locked. Please log in again.', 'error');
+      return;
+    }
+    if (resetConfirmInput.value.trim() !== 'RESET') {
+      notice('resetNotice', 'Please type RESET exactly to confirm.', 'error');
+      return;
+    }
+
+    confirmResetBtn.disabled = true;
+    confirmResetBtn.textContent = 'Resetting…';
+
+    try {
+      const { data, error } = await db.rpc(
+        'examnet_admin_reset_feedback',
+        { p_password: adminPass }
+      );
+
+      if (error) {
+        notice(
+          'resetNotice',
+          'Reset failed: ' + error.message + ' (Make sure examnet_admin_reset_feedback RPC is created in Supabase.)',
+          'error'
+        );
+        confirmResetBtn.disabled = false;
+        confirmResetBtn.textContent = 'Delete All Feedback';
+        return;
+      }
+
+      const deletedCount = Number(data ?? records.length ?? 0);
+      records = [];
+      filteredRecords = [];
+      populateFilters();
+      applyFilters();
+      closeResetModal();
+
+      notice(
+        'adminNotice',
+        `Cleared ${deletedCount} test feedback record(s). Ready for fresh testing.`,
+        'success'
+      );
+    } catch (err) {
+      notice('resetNotice', 'Unexpected reset error: ' + err.message, 'error');
+      confirmResetBtn.disabled = false;
+      confirmResetBtn.textContent = 'Delete All Feedback';
+    }
+  }
+
+</script>
+
+</body>
+</html>
